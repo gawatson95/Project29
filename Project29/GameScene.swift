@@ -22,6 +22,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var banana: SKSpriteNode!
     
     var currentPlayer = 1
+    var isGameOver = false
+    var wind = Int.random(in: -5...5) * 2
+    
+    var player1Score = 0 {
+        didSet {
+            viewController?.player1ScoreLabel.text = "\(player1Score)"
+        }
+    }
+    
+    var player2Score = 0 {
+        didSet {
+            viewController?.player2ScoreLabel.text = "\(player2Score)"
+        }
+    }
     
     override func didMove(to view: SKView) {
         backgroundColor = UIColor(hue: 0.669, saturation: 0.99, brightness: 0.67, alpha: 1)
@@ -29,6 +43,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createPlayers()
         
         physicsWorld.contactDelegate = self
+        physicsWorld.gravity = CGVector(dx: Double(wind), dy: -9.8)
     }
     
     func createBuildings() {
@@ -119,7 +134,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func deg2rad(degrees: Int) -> Double {
-        return Double(degrees) + Double.pi / 180
+        return Double(degrees) * (Double.pi / 180)
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
@@ -142,10 +157,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         if firstNode.name == "banana" && secondNode.name == "player1" {
+            player2Score = player2Score + 1
             destroy(player: player1)
         }
         
         if firstNode.name == "banana" && secondNode.name == "player2" {
+            player1Score = player1Score + 1
             destroy(player: player2)
         }
     }
@@ -159,16 +176,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.removeFromParent()
         banana.removeFromParent()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            let newGame = GameScene(size: self.size)
-            newGame.viewController = self.viewController
-            self.viewController?.currentGame = newGame
-            
-            self.changePlayer()
-            newGame.currentPlayer = self.currentPlayer
-            
-            let transition = SKTransition.doorway(withDuration: 1.5)
-            self.view?.presentScene(newGame, transition: transition)
+        if player1Score == 3 || player2Score == 3 {
+            gameOver()
+        }
+        
+        if !isGameOver {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                let newGame = GameScene(size: self.size)
+                newGame.viewController = self.viewController
+                self.viewController?.currentGame = newGame
+                
+                self.changePlayer()
+                newGame.currentPlayer = self.currentPlayer
+                newGame.player1Score = self.player1Score
+                newGame.player2Score = self.player2Score
+                let transition = SKTransition.doorway(withDuration: 1.5)
+                self.view?.presentScene(newGame, transition: transition)
+            }
         }
     }
     
@@ -206,6 +230,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             banana.removeFromParent()
             banana = nil
             changePlayer()
+        }
+    }
+    
+    func gameOver() {
+        isGameOver = true
+        player1.removeFromParent()
+        player2.removeFromParent()
+        let gameOver = SKSpriteNode(imageNamed: "gameOver")
+        gameOver.position = CGPoint(x: 512, y: 384)
+        gameOver.zPosition = 1
+        addChild(gameOver)
+    }
+    
+    func configureWind() {
+        let absWind = abs(wind)
+        if wind > 0 {
+            viewController?.windLabel.text = "\(absWind) MPH >>"
+        } else if wind < 0 {
+            viewController?.windLabel.text = "<< \(absWind) MPH"
+        } else {
+            viewController?.windLabel.text = "0 MPH"
         }
     }
 }

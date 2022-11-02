@@ -12,6 +12,9 @@ import GameplayKit
 class GameViewController: UIViewController {
     var currentGame: GameScene?
 
+    @IBOutlet var player1ScoreLabel: UILabel!
+    @IBOutlet var player2ScoreLabel: UILabel!
+    
     @IBOutlet var angleLabel: UILabel!
     @IBOutlet var angleSlider: UISlider!
     
@@ -20,6 +23,8 @@ class GameViewController: UIViewController {
     
     @IBOutlet var velocitySlider: UISlider!
     @IBOutlet var velocityLabel: UILabel!
+    
+    @IBOutlet var windLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,6 +50,7 @@ class GameViewController: UIViewController {
         
         angleChanged(self)
         velocityChanged(self)
+        currentGame?.configureWind()
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
